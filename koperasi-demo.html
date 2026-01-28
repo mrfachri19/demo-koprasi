@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KOPERASI - Sistem Koperasi Karyawan</title>
+  <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Plus Jakarta Sans', 'sans-serif'],
+            mono: ['Space Mono', 'monospace'],
+          },
+          colors: {
+            primary: {
+              50: '#eef9ff',
+              100: '#d9f1ff',
+              200: '#bce8ff',
+              300: '#8edaff',
+              400: '#59c3ff',
+              500: '#33a6ff',
+              600: '#1a85f5',
+              700: '#146ee1',
+              800: '#1759b6',
+              900: '#194c8f',
+              950: '#142f57',
+            },
+            accent: {
+              50: '#f0fdf5',
+              100: '#dcfce8',
+              200: '#bbf7d1',
+              300: '#86efac',
+              400: '#4ade80',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803c',
+              800: '#166533',
+              900: '#14532b',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .mono {
+      font-family: 'Space Mono', monospace;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    .gradient-mesh {
+      background: 
+        radial-gradient(at 40% 20%, rgba(26, 133, 245, 0.15) 0px, transparent 50%),
+        radial-gradient(at 80% 0%, rgba(34, 197, 94, 0.1) 0px, transparent 50%),
+        radial-gradient(at 0% 50%, rgba(26, 133, 245, 0.1) 0px, transparent 50%),
+        radial-gradient(at 80% 50%, rgba(34, 197, 94, 0.08) 0px, transparent 50%),
+        radial-gradient(at 0% 100%, rgba(26, 133, 245, 0.1) 0px, transparent 50%),
+        #f8fafc;
+    }
+    .sidebar-gradient {
+      background: linear-gradient(180deg, #142f57 0%, #194c8f 100%);
+    }
+    .stat-card {
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.1);
+    }
+    .nav-item {
+      transition: all 0.2s ease;
+    }
+    .nav-item:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .nav-item.active {
+      background: rgba(255, 255, 255, 0.15);
+      border-left: 3px solid #4ade80;
+    }
+    .btn-primary {
+      background: linear-gradient(135deg, #1a85f5 0%, #146ee1 100%);
+      transition: all 0.2s ease;
+    }
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 20px -6px rgba(26, 133, 245, 0.5);
+    }
+    .table-row {
+      transition: all 0.15s ease;
+    }
+    .table-row:hover {
+      background: rgba(26, 133, 245, 0.04);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease forwards;
+    }
+    .delay-1 { animation-delay: 0.1s; opacity: 0; }
+    .delay-2 { animation-delay: 0.2s; opacity: 0; }
+    .delay-3 { animation-delay: 0.3s; opacity: 0; }
+    .delay-4 { animation-delay: 0.4s; opacity: 0; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #1a85f5;
+      box-shadow: 0 0 0 3px rgba(26, 133, 245, 0.15);
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-slate-50">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect, createContext, useContext } = React;
+
+    // ============================================
+    // DATA & CONTEXT
+    // ============================================
+    
+    const dummyMembers = [
+      { id: 1, nomorAnggota: 'KOP-001', nama: 'Ahmad Fauzi', email: 'ahmad@company.com', jabatan: 'Staff IT', departemen: 'IT', tanggalDaftar: '2023-01-15', status: 'aktif', simpananPokok: 500000, simpananWajib: 2400000, simpananSukarela: 1500000 },
+      { id: 2, nomorAnggota: 'KOP-002', nama: 'Siti Rahayu', email: 'siti@company.com', jabatan: 'Accounting', departemen: 'Finance', tanggalDaftar: '2023-02-20', status: 'aktif', simpananPokok: 500000, simpananWajib: 2200000, simpananSukarela: 3000000 },
+      { id: 3, nomorAnggota: 'KOP-003', nama: 'Budi Santoso', email: 'budi@company.com', jabatan: 'Manager', departemen: 'Operations', tanggalDaftar: '2023-01-10', status: 'aktif', simpananPokok: 500000, simpananWajib: 2400000, simpananSukarela: 5000000 },
+      { id: 4, nomorAnggota: 'KOP-004', nama: 'Dewi Lestari', email: 'dewi@company.com', jabatan: 'HRD', departemen: 'HR', tanggalDaftar: '2023-03-05', status: 'aktif', simpananPokok: 500000, simpananWajib: 2100000, simpananSukarela: 800000 },
+      { id: 5, nomorAnggota: 'KOP-005', nama: 'Rizky Pratama', email: 'rizky@company.com', jabatan: 'Marketing', departemen: 'Marketing', tanggalDaftar: '2023-04-12', status: 'aktif', simpananPokok: 500000, simpananWajib: 1900000, simpananSukarela: 2000000 },
+      { id: 6, nomorAnggota: 'KOP-006', nama: 'Putri Ayu', email: 'putri@company.com', jabatan: 'Staff', departemen: 'Admin', tanggalDaftar: '2023-05-08', status: 'non-aktif', simpananPokok: 500000, simpananWajib: 1800000, simpananSukarela: 0 },
+    ];
+
+    const dummyLoans = [
+      { id: 1, nomorPinjaman: 'PNJ-2024-001', anggotaId: 1, namaAnggota: 'Ahmad Fauzi', jenis: 'Reguler', nominal: 10000000, tenor: 12, bunga: 1, angsuranPerBulan: 925000, tanggalPengajuan: '2024-01-10', status: 'ongoing', sisaAngsuran: 8, totalTerbayar: 3700000 },
+      { id: 2, nomorPinjaman: 'PNJ-2024-002', anggotaId: 3, namaAnggota: 'Budi Santoso', jenis: 'Khusus', nominal: 25000000, tenor: 24, bunga: 1, angsuranPerBulan: 1145833, tanggalPengajuan: '2024-01-15', status: 'in_review', sisaAngsuran: 24, totalTerbayar: 0, currentApprover: 'Bendahara' },
+      { id: 3, nomorPinjaman: 'PNJ-2024-003', anggotaId: 2, namaAnggota: 'Siti Rahayu', jenis: 'Darurat', nominal: 3000000, tenor: 6, bunga: 1, angsuranPerBulan: 530000, tanggalPengajuan: '2024-01-20', status: 'submitted', sisaAngsuran: 6, totalTerbayar: 0, currentApprover: 'Admin' },
+      { id: 4, nomorPinjaman: 'PNJ-2024-004', anggotaId: 5, namaAnggota: 'Rizky Pratama', jenis: 'Reguler', nominal: 8000000, tenor: 10, bunga: 1, angsuranPerBulan: 880000, tanggalPengajuan: '2023-10-05', status: 'completed', sisaAngsuran: 0, totalTerbayar: 8800000 },
+    ];
+
+    const dummyInstallments = [
+      { id: 1, pinjamanId: 1, angsuranKe: 1, tanggalJatuhTempo: '2024-02-10', nominal: 925000, status: 'paid', tanggalBayar: '2024-02-08' },
+      { id: 2, pinjamanId: 1, angsuranKe: 2, tanggalJatuhTempo: '2024-03-10', nominal: 925000, status: 'paid', tanggalBayar: '2024-03-10' },
+      { id: 3, pinjamanId: 1, angsuranKe: 3, tanggalJatuhTempo: '2024-04-10', nominal: 925000, status: 'paid', tanggalBayar: '2024-04-09' },
+      { id: 4, pinjamanId: 1, angsuranKe: 4, tanggalJatuhTempo: '2024-05-10', nominal: 925000, status: 'paid', tanggalBayar: '2024-05-10' },
+      { id: 5, pinjamanId: 1, angsuranKe: 5, tanggalJatuhTempo: '2024-06-10', nominal: 925000, status: 'pending', tanggalBayar: null },
+      { id: 6, pinjamanId: 1, angsuranKe: 6, tanggalJatuhTempo: '2024-07-10', nominal: 925000, status: 'pending', tanggalBayar: null },
+    ];
+
+    const dummySavingTransactions = [
+      { id: 1, anggotaId: 1, jenis: 'Simpanan Wajib', nominal: 100000, tanggal: '2024-05-01', keterangan: 'Simpanan Wajib Mei 2024' },
+      { id: 2, anggotaId: 1, jenis: 'Simpanan Sukarela', nominal: 500000, tanggal: '2024-05-05', keterangan: 'Setor Sukarela' },
+      { id: 3, anggotaId: 2, jenis: 'Simpanan Wajib', nominal: 100000, tanggal: '2024-05-01', keterangan: 'Simpanan Wajib Mei 2024' },
+      { id: 4, anggotaId: 3, jenis: 'Simpanan Wajib', nominal: 100000, tanggal: '2024-05-01', keterangan: 'Simpanan Wajib Mei 2024' },
+      { id: 5, anggotaId: 2, jenis: 'Penarikan Sukarela', nominal: -200000, tanggal: '2024-05-10', keterangan: 'Penarikan Sukarela' },
+    ];
+
+    const AppContext = createContext();
+
+    // ============================================
+    // ICONS
+    // ============================================
+    
+    const Icons = {
+      Dashboard: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
+        </svg>
+      ),
+      Users: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+        </svg>
+      ),
+      Wallet: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        </svg>
+      ),
+      CreditCard: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+      ClipboardCheck: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+        </svg>
+      ),
+      Calendar: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+        </svg>
+      ),
+      Chart: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+        </svg>
+      ),
+      Settings: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+        </svg>
+      ),
+      Logout: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+        </svg>
+      ),
+      Plus: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+        </svg>
+      ),
+      Search: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      ),
+      Check: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+        </svg>
+      ),
+      X: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      ),
+      Eye: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      ),
+      TrendingUp: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+        </svg>
+      ),
+      TrendingDown: () => (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6" />
+        </svg>
+      ),
+      Bell: () => (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+        </svg>
+      ),
+      Menu: () => (
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      ),
+    };
+
+    // ============================================
+    // UTILITIES
+    // ============================================
+    
+    const formatCurrency = (num) => {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
+    };
+
+    const formatDate = (dateStr) => {
+      return new Date(dateStr).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    };
+
+    // ============================================
+    // COMPONENTS
+    // ============================================
+
+    // Login Page
+    const LoginPage = ({ onLogin }) => {
+      const [selectedRole, setSelectedRole] = useState('admin');
+      
+      const roles = [
+        { id: 'super_admin', name: 'Super Admin', desc: 'Akses penuh ke semua fitur' },
+        { id: 'ketua', name: 'Ketua', desc: 'Approval pinjaman besar & laporan' },
+        { id: 'bendahara', name: 'Bendahara', desc: 'Kelola keuangan & pencairan' },
+        { id: 'admin', name: 'Admin', desc: 'Operasional harian' },
+        { id: 'anggota', name: 'Anggota', desc: 'Akses simpanan & pinjaman pribadi' },
+      ];
+
+      return (
+        <div className="min-h-screen gradient-mesh flex items-center justify-center p-4">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-8 animate-fade-in">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-primary-600 text-white mb-4 shadow-lg">
+                <span className="text-2xl font-bold">K</span>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">KOPERASI</h1>
+              <p className="text-gray-500 mt-2">Sistem Koperasi Karyawan Internal</p>
+            </div>
+            
+            <div className="glass rounded-3xl p-8 shadow-xl animate-fade-in delay-1">
+              <h2 className="text-lg font-semibold text-gray-800 mb-6">Pilih Role untuk Demo</h2>
+              
+              <div className="space-y-3 mb-6">
+                {roles.map((role) => (
+                  <label 
+                    key={role.id}
+                    className={`flex items-center p-4 rounded-xl cursor-pointer transition-all ${
+                      selectedRole === role.id 
+                        ? 'bg-primary-50 border-2 border-primary-500' 
+                        : 'bg-white border-2 border-gray-100 hover:border-gray-200'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="role"
+                      value={role.id}
+                      checked={selectedRole === role.id}
+                      onChange={(e) => setSelectedRole(e.target.value)}
+                      className="sr-only"
+                    />
+                    <div className={`w-5 h-5 rounded-full border-2 mr-4 flex items-center justify-center ${
+                      selectedRole === role.id ? 'border-primary-500 bg-primary-500' : 'border-gray-300'
+                    }`}>
+                      {selectedRole === role.id && (
+                        <div className="w-2 h-2 rounded-full bg-white" />
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="font-medium text-gray-900">{role.name}</div>
+                      <div className="text-sm text-gray-500">{role.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              
+              <button
+                onClick={() => onLogin(selectedRole)}
+                className="w-full btn-primary text-white py-4 rounded-xl font-semibold text-lg"
+              >
+                Masuk ke Demo
+              </button>
+            </div>
+            
+            <p className="text-center text-gray-400 text-sm mt-6 animate-fade-in delay-2">
+              Demo Version • Data bersifat simulasi
+            </p>
+          </div>
+        </div>
+      );
+    };
+
+    // Sidebar
+    const Sidebar = ({ currentPage, setCurrentPage, role, onLogout }) => {
+      const getMenuItems = () => {
+        const baseItems = [
+          { id: 'dashboard', label: 'Dashboard', icon: Icons.Dashboard },
+        ];
+
+        if (role === 'anggota') {
+          return [
+            ...baseItems,
+            { id: 'my-savings', label: 'Simpanan Saya', icon: Icons.Wallet },
+            { id: 'my-loans', label: 'Pinjaman Saya', icon: Icons.CreditCard },
+            { id: 'loan-apply', label: 'Ajukan Pinjaman', icon: Icons.Plus },
+          ];
+        }
+
+        const adminItems = [
+          ...baseItems,
+          { id: 'members', label: 'Kelola Anggota', icon: Icons.Users },
+          { id: 'savings', label: 'Simpanan', icon: Icons.Wallet },
+          { id: 'loans', label: 'Pinjaman', icon: Icons.CreditCard },
+          { id: 'approval', label: 'Approval', icon: Icons.ClipboardCheck },
+          { id: 'installments', label: 'Angsuran', icon: Icons.Calendar },
+          { id: 'reports', label: 'Laporan', icon: Icons.Chart },
+        ];
+
+        if (role === 'super_admin') {
+          return [...adminItems, { id: 'settings', label: 'Pengaturan', icon: Icons.Settings }];
+        }
+
+        return adminItems;
+      };
+
+      const menuItems = getMenuItems();
+
+      return (
+        <div className="w-64 sidebar-gradient text-white flex flex-col h-screen fixed left-0 top-0">
+          <div className="p-6 border-b border-white/10">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+                <span className="text-lg font-bold">K</span>
+              </div>
+              <div>
+                <h1 className="font-bold text-lg">KOPERASI</h1>
+                <p className="text-xs text-white/60">Karyawan Internal</p>
+              </div>
+            </div>
+          </div>
+          
+          <nav className="flex-1 py-4 overflow-y-auto scrollbar-thin">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setCurrentPage(item.id)}
+                className={`nav-item w-full flex items-center gap-3 px-6 py-3 text-left ${
+                  currentPage === item.id ? 'active' : 'text-white/70 hover:text-white'
+                }`}
+              >
+                <item.icon />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            ))}
+          </nav>
+          
+          <div className="p-4 border-t border-white/10">
+            <div className="glass rounded-xl p-4 mb-4 bg-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-accent-500 flex items-center justify-center text-white font-semibold">
+                  {role === 'anggota' ? 'AF' : role.charAt(0).toUpperCase()}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">
+                    {role === 'anggota' ? 'Ahmad Fauzi' : role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                  </p>
+                  <p className="text-xs text-white/50 capitalize">{role.replace('_', ' ')}</p>
+                </div>
+              </div>
+            </div>
+            <button
+              onClick={onLogout}
+              className="w-full flex items-center justify-center gap-2 py-2 text-white/70 hover:text-white transition-colors"
+            >
+              <Icons.Logout />
+              <span>Keluar</span>
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Header
+    const Header = ({ title, subtitle }) => (
+      <div className="flex items-center justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+          {subtitle && <p className="text-gray-500 mt-1">{subtitle}</p>}
+        </div>
+        <div className="flex items-center gap-4">
+          <button className="relative p-2 text-gray-400 hover:text-gray-600 transition-colors">
+            <Icons.Bell />
+            <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+          </button>
+        </div>
+      </div>
+    );
+
+    // Stat Card
+    const StatCard = ({ title, value, subtitle, icon: Icon, color = 'primary', trend }) => {
+      const colors = {
+        primary: 'bg-primary-500',
+        green: 'bg-accent-500',
+        orange: 'bg-orange-500',
+        purple: 'bg-purple-500',
+      };
+
+      return (
+        <div className="stat-card bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-gray-500 text-sm font-medium">{title}</p>
+              <p className="text-2xl font-bold text-gray-900 mt-2">{value}</p>
+              {subtitle && (
+                <p className="text-sm text-gray-400 mt-1">{subtitle}</p>
+              )}
+              {trend && (
+                <div className={`flex items-center gap-1 mt-2 text-sm ${trend > 0 ? 'text-accent-600' : 'text-red-500'}`}>
+                  {trend > 0 ? <Icons.TrendingUp /> : <Icons.TrendingDown />}
+                  <span>{Math.abs(trend)}% dari bulan lalu</span>
+                </div>
+              )}
+            </div>
+            <div className={`w-12 h-12 ${colors[color]} rounded-xl flex items-center justify-center text-white`}>
+              <Icon />
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Dashboard Page
+    const DashboardPage = ({ role }) => {
+      const totalSimpanan = dummyMembers.reduce((sum, m) => sum + m.simpananPokok + m.simpananWajib + m.simpananSukarela, 0);
+      const totalPinjamanAktif = dummyLoans.filter(l => l.status === 'ongoing').reduce((sum, l) => sum + l.nominal, 0);
+      const pendingApproval = dummyLoans.filter(l => ['submitted', 'in_review'].includes(l.status)).length;
+
+      return (
+        <div>
+          <Header title="Dashboard" subtitle={`Selamat datang, ${role === 'anggota' ? 'Ahmad Fauzi' : role.replace('_', ' ')}`} />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div className="animate-fade-in">
+              <StatCard
+                title="Total Anggota"
+                value={dummyMembers.filter(m => m.status === 'aktif').length}
+                subtitle="Anggota aktif"
+                icon={Icons.Users}
+                color="primary"
+                trend={5}
+              />
+            </div>
+            <div className="animate-fade-in delay-1">
+              <StatCard
+                title="Total Simpanan"
+                value={formatCurrency(totalSimpanan)}
+                subtitle="Semua jenis simpanan"
+                icon={Icons.Wallet}
+                color="green"
+                trend={8}
+              />
+            </div>
+            <div className="animate-fade-in delay-2">
+              <StatCard
+                title="Pinjaman Aktif"
+                value={formatCurrency(totalPinjamanAktif)}
+                subtitle={`${dummyLoans.filter(l => l.status === 'ongoing').length} pinjaman berjalan`}
+                icon={Icons.CreditCard}
+                color="orange"
+              />
+            </div>
+            <div className="animate-fade-in delay-3">
+              <StatCard
+                title="Pending Approval"
+                value={pendingApproval}
+                subtitle="Menunggu persetujuan"
+                icon={Icons.ClipboardCheck}
+                color="purple"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-fade-in delay-2">
+              <h3 className="font-semibold text-gray-900 mb-4">Pengajuan Pinjaman Terbaru</h3>
+              <div className="space-y-4">
+                {dummyLoans.slice(0, 4).map((loan) => (
+                  <div key={loan.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold">
+                        {loan.namaAnggota.split(' ').map(n => n[0]).join('')}
+                      </div>
+                      <div>
+                        <p className="font-medium text-gray-900">{loan.namaAnggota}</p>
+                        <p className="text-sm text-gray-500">{loan.jenis} • {formatCurrency(loan.nominal)}</p>
+                      </div>
+                    </div>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      loan.status === 'ongoing' ? 'bg-green-100 text-green-700' :
+                      loan.status === 'completed' ? 'bg-gray-100 text-gray-600' :
+                      loan.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
+                      loan.status === 'in_review' ? 'bg-blue-100 text-blue-700' :
+                      'bg-gray-100 text-gray-600'
+                    }`}>
+                      {loan.status === 'ongoing' ? 'Berjalan' :
+                       loan.status === 'completed' ? 'Lunas' :
+                       loan.status === 'submitted' ? 'Diajukan' :
+                       loan.status === 'in_review' ? 'Dalam Review' : loan.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 animate-fade-in delay-3">
+              <h3 className="font-semibold text-gray-900 mb-4">Transaksi Simpanan Terakhir</h3>
+              <div className="space-y-4">
+                {dummySavingTransactions.slice(0, 5).map((tx) => {
+                  const member = dummyMembers.find(m => m.id === tx.anggotaId);
+                  return (
+                    <div key={tx.id} className="flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                          tx.nominal > 0 ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'
+                        }`}>
+                          {tx.nominal > 0 ? <Icons.TrendingUp /> : <Icons.TrendingDown />}
+                        </div>
+                        <div>
+                          <p className="font-medium text-gray-900">{member?.nama}</p>
+                          <p className="text-sm text-gray-500">{tx.jenis}</p>
+                        </div>
+                      </div>
+                      <span className={`font-semibold ${tx.nominal > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.nominal > 0 ? '+' : ''}{formatCurrency(tx.nominal)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Members Page
+    const MembersPage = () => {
+      const [search, setSearch] = useState('');
+      const [showModal, setShowModal] = useState(false);
+
+      const filteredMembers = dummyMembers.filter(m => 
+        m.nama.toLowerCase().includes(search.toLowerCase()) ||
+        m.nomorAnggota.toLowerCase().includes(search.toLowerCase())
+      );
+
+      return (
+        <div>
+          <Header title="Kelola Anggota" subtitle="Manajemen data anggota koperasi" />
+          
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between">
+                <div className="relative flex-1 max-w-md">
+                  <Icons.Search />
+                  <input
+                    type="text"
+                    placeholder="Cari anggota..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500"
+                  />
+                  <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+                    <Icons.Search />
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setShowModal(true)}
+                  className="btn-primary text-white px-6 py-3 rounded-xl font-medium flex items-center gap-2"
+                >
+                  <Icons.Plus />
+                  Tambah Anggota
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Anggota</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Departemen</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Total Simpanan</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {filteredMembers.map((member) => (
+                    <tr key={member.id} className="table-row">
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold">
+                            {member.nama.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">{member.nama}</p>
+                            <p className="text-sm text-gray-500 mono">{member.nomorAnggota}</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="text-gray-900">{member.jabatan}</p>
+                        <p className="text-sm text-gray-500">{member.departemen}</p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <p className="font-semibold text-gray-900">
+                          {formatCurrency(member.simpananPokok + member.simpananWajib + member.simpananSukarela)}
+                        </p>
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          member.status === 'aktif' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'
+                        }`}>
+                          {member.status === 'aktif' ? 'Aktif' : 'Non-Aktif'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className="p-2 text-gray-400 hover:text-primary-600 transition-colors">
+                          <Icons.Eye />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {showModal && (
+            <Modal title="Tambah Anggota Baru" onClose={() => setShowModal(false)}>
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nama Lengkap</label>
+                  <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" placeholder="Masukkan nama lengkap" />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <input type="email" className="w-full px-4 py-3 border border-gray-200 rounded-xl" placeholder="email@company.com" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">No. Telepon</label>
+                    <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" placeholder="08xxxxxxxxxx" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Departemen</label>
+                    <select className="w-full px-4 py-3 border border-gray-200 rounded-xl">
+                      <option>IT</option>
+                      <option>Finance</option>
+                      <option>HR</option>
+                      <option>Marketing</option>
+                      <option>Operations</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
+                    <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" placeholder="Jabatan" />
+                  </div>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50">
+                    Batal
+                  </button>
+                  <button type="submit" className="flex-1 btn-primary text-white py-3 rounded-xl font-medium">
+                    Simpan
+                  </button>
+                </div>
+              </form>
+            </Modal>
+          )}
+        </div>
+      );
+    };
+
+    // Modal Component
+    const Modal = ({ title, children, onClose }) => (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
+        <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto animate-fade-in">
+          <div className="flex items-center justify-between p-6 border-b border-gray-100">
+            <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+            <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 transition-colors">
+              <Icons.X />
+            </button>
+          </div>
+          <div className="p-6">
+            {children}
+          </div>
+        </div>
+      </div>
+    );
+
+    // Savings Page
+    const SavingsPage = () => {
+      const [showModal, setShowModal] = useState(false);
+
+      return (
+        <div>
+          <Header title="Simpanan" subtitle="Kelola simpanan anggota koperasi" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <StatCard
+              title="Total Simpanan Pokok"
+              value={formatCurrency(dummyMembers.reduce((sum, m) => sum + m.simpananPokok, 0))}
+              icon={Icons.Wallet}
+              color="primary"
+            />
+            <StatCard
+              title="Total Simpanan Wajib"
+              value={formatCurrency(dummyMembers.reduce((sum, m) => sum + m.simpananWajib, 0))}
+              icon={Icons.Wallet}
+              color="green"
+            />
+            <StatCard
+              title="Total Simpanan Sukarela"
+              value={formatCurrency(dummyMembers.reduce((sum, m) => sum + m.simpananSukarela, 0))}
+              icon={Icons.Wallet}
+              color="orange"
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100 flex justify-between items-center">
+              <h3 className="font-semibold text-gray-900">Transaksi Simpanan</h3>
+              <button 
+                onClick={() => setShowModal(true)}
+                className="btn-primary text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2"
+              >
+                <Icons.Plus />
+                Input Simpanan
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Anggota</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jenis</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nominal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {dummySavingTransactions.map((tx) => {
+                    const member = dummyMembers.find(m => m.id === tx.anggotaId);
+                    return (
+                      <tr key={tx.id} className="table-row">
+                        <td className="px-6 py-4 text-gray-600">{formatDate(tx.tanggal)}</td>
+                        <td className="px-6 py-4 font-medium text-gray-900">{member?.nama}</td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                            tx.jenis.includes('Penarikan') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
+                          }`}>
+                            {tx.jenis}
+                          </span>
+                        </td>
+                        <td className={`px-6 py-4 font-semibold ${tx.nominal > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                          {tx.nominal > 0 ? '+' : ''}{formatCurrency(tx.nominal)}
+                        </td>
+                        <td className="px-6 py-4 text-gray-500">{tx.keterangan}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {showModal && (
+            <Modal title="Input Simpanan" onClose={() => setShowModal(false)}>
+              <form className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Anggota</label>
+                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl">
+                    {dummyMembers.filter(m => m.status === 'aktif').map(m => (
+                      <option key={m.id} value={m.id}>{m.nama} ({m.nomorAnggota})</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Simpanan</label>
+                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl">
+                    <option>Simpanan Wajib</option>
+                    <option>Simpanan Sukarela</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Nominal</label>
+                  <input type="number" className="w-full px-4 py-3 border border-gray-200 rounded-xl" placeholder="0" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                  <textarea className="w-full px-4 py-3 border border-gray-200 rounded-xl" rows="2" placeholder="Keterangan tambahan"></textarea>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50">
+                    Batal
+                  </button>
+                  <button type="submit" className="flex-1 btn-primary text-white py-3 rounded-xl font-medium">
+                    Simpan
+                  </button>
+                </div>
+              </form>
+            </Modal>
+          )}
+        </div>
+      );
+    };
+
+    // Loans Page
+    const LoansPage = () => {
+      return (
+        <div>
+          <Header title="Pinjaman" subtitle="Daftar semua pinjaman anggota" />
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <StatCard
+              title="Pinjaman Berjalan"
+              value={formatCurrency(dummyLoans.filter(l => l.status === 'ongoing').reduce((sum, l) => sum + l.nominal, 0))}
+              subtitle={`${dummyLoans.filter(l => l.status === 'ongoing').length} pinjaman`}
+              icon={Icons.CreditCard}
+              color="orange"
+            />
+            <StatCard
+              title="Dalam Proses"
+              value={dummyLoans.filter(l => ['submitted', 'in_review'].includes(l.status)).length}
+              subtitle="Menunggu approval"
+              icon={Icons.ClipboardCheck}
+              color="purple"
+            />
+            <StatCard
+              title="Total Lunas"
+              value={formatCurrency(dummyLoans.filter(l => l.status === 'completed').reduce((sum, l) => sum + l.nominal, 0))}
+              subtitle={`${dummyLoans.filter(l => l.status === 'completed').length} pinjaman`}
+              icon={Icons.Check}
+              color="green"
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-900">Semua Pinjaman</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">No. Pinjaman</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Anggota</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jenis</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nominal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tenor</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {dummyLoans.map((loan) => (
+                    <tr key={loan.id} className="table-row">
+                      <td className="px-6 py-4 mono text-sm text-gray-600">{loan.nomorPinjaman}</td>
+                      <td className="px-6 py-4 font-medium text-gray-900">{loan.namaAnggota}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          loan.jenis === 'Reguler' ? 'bg-blue-100 text-blue-700' :
+                          loan.jenis === 'Darurat' ? 'bg-red-100 text-red-700' :
+                          'bg-purple-100 text-purple-700'
+                        }`}>
+                          {loan.jenis}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-900">{formatCurrency(loan.nominal)}</td>
+                      <td className="px-6 py-4 text-gray-600">{loan.tenor} bulan</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          loan.status === 'ongoing' ? 'bg-green-100 text-green-700' :
+                          loan.status === 'completed' ? 'bg-gray-100 text-gray-600' :
+                          loan.status === 'submitted' ? 'bg-yellow-100 text-yellow-700' :
+                          loan.status === 'in_review' ? 'bg-blue-100 text-blue-700' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {loan.status === 'ongoing' ? 'Berjalan' :
+                           loan.status === 'completed' ? 'Lunas' :
+                           loan.status === 'submitted' ? 'Diajukan' :
+                           loan.status === 'in_review' ? 'Dalam Review' : loan.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        <button className="p-2 text-gray-400 hover:text-primary-600 transition-colors">
+                          <Icons.Eye />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Approval Page
+    const ApprovalPage = ({ role }) => {
+      const [showDetailModal, setShowDetailModal] = useState(null);
+      const pendingLoans = dummyLoans.filter(l => ['submitted', 'in_review'].includes(l.status));
+
+      const canApprove = (loan) => {
+        if (role === 'super_admin') return true;
+        if (role === 'admin' && loan.status === 'submitted' && loan.nominal <= 5000000) return true;
+        if (role === 'bendahara' && loan.currentApprover === 'Bendahara') return true;
+        if (role === 'ketua' && loan.currentApprover === 'Ketua') return true;
+        return false;
+      };
+
+      return (
+        <div>
+          <Header title="Approval Pinjaman" subtitle="Persetujuan pengajuan pinjaman" />
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <div className="flex items-center gap-2">
+                <h3 className="font-semibold text-gray-900">Menunggu Approval</h3>
+                <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-medium rounded-full">
+                  {pendingLoans.length}
+                </span>
+              </div>
+            </div>
+
+            {pendingLoans.length === 0 ? (
+              <div className="p-12 text-center">
+                <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Icons.ClipboardCheck />
+                </div>
+                <p className="text-gray-500">Tidak ada pengajuan yang menunggu approval</p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100">
+                {pendingLoans.map((loan) => {
+                  const member = dummyMembers.find(m => m.id === loan.anggotaId);
+                  const totalSimpanan = member ? member.simpananPokok + member.simpananWajib + member.simpananSukarela : 0;
+                  
+                  return (
+                    <div key={loan.id} className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                        <div className="flex items-start gap-4">
+                          <div className="w-12 h-12 rounded-full bg-primary-100 flex items-center justify-center text-primary-600 font-semibold">
+                            {loan.namaAnggota.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                          </div>
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{loan.namaAnggota}</h4>
+                            <p className="text-sm text-gray-500 mono">{loan.nomorPinjaman}</p>
+                            <div className="flex flex-wrap gap-2 mt-2">
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                {loan.jenis}
+                              </span>
+                              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">
+                                {loan.tenor} bulan
+                              </span>
+                              <span className="px-2 py-1 bg-yellow-100 text-yellow-700 text-xs rounded">
+                                Menunggu: {loan.currentApprover || 'Admin'}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-col items-end gap-2">
+                          <p className="text-2xl font-bold text-gray-900">{formatCurrency(loan.nominal)}</p>
+                          <p className="text-sm text-gray-500">
+                            Angsuran: {formatCurrency(loan.angsuranPerBulan)}/bulan
+                          </p>
+                          <p className="text-xs text-gray-400">
+                            Total Simpanan: {formatCurrency(totalSimpanan)}
+                          </p>
+                        </div>
+                      </div>
+
+                      {canApprove(loan) && (
+                        <div className="flex gap-3 mt-4 pt-4 border-t border-gray-100">
+                          <button 
+                            onClick={() => setShowDetailModal(loan)}
+                            className="px-4 py-2 border border-gray-200 rounded-xl text-gray-700 font-medium hover:bg-gray-50"
+                          >
+                            Lihat Detail
+                          </button>
+                          <button className="px-4 py-2 border border-red-200 text-red-600 rounded-xl font-medium hover:bg-red-50 flex items-center gap-2">
+                            <Icons.X />
+                            Tolak
+                          </button>
+                          <button className="btn-primary text-white px-4 py-2 rounded-xl font-medium flex items-center gap-2">
+                            <Icons.Check />
+                            Setujui
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {showDetailModal && (
+            <Modal title="Detail Pengajuan Pinjaman" onClose={() => setShowDetailModal(null)}>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-500">Nomor Pinjaman</p>
+                    <p className="font-medium mono">{showDetailModal.nomorPinjaman}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Tanggal Pengajuan</p>
+                    <p className="font-medium">{formatDate(showDetailModal.tanggalPengajuan)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Nama Anggota</p>
+                    <p className="font-medium">{showDetailModal.namaAnggota}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Jenis Pinjaman</p>
+                    <p className="font-medium">{showDetailModal.jenis}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Nominal</p>
+                    <p className="font-bold text-lg text-primary-600">{formatCurrency(showDetailModal.nominal)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Tenor</p>
+                    <p className="font-medium">{showDetailModal.tenor} bulan</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Bunga</p>
+                    <p className="font-medium">{showDetailModal.bunga}% / bulan</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Angsuran per Bulan</p>
+                    <p className="font-medium">{formatCurrency(showDetailModal.angsuranPerBulan)}</p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-50 rounded-xl p-4 mt-4">
+                  <p className="text-sm font-medium text-gray-700 mb-2">Riwayat Approval</p>
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span className="text-gray-600">Diajukan oleh anggota</span>
+                      <span className="text-gray-400 ml-auto">{formatDate(showDetailModal.tanggalPengajuan)}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                      <span className="text-gray-600">Menunggu approval {showDetailModal.currentApprover || 'Admin'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4">
+                  <button 
+                    onClick={() => setShowDetailModal(null)}
+                    className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50"
+                  >
+                    Tutup
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    };
+
+    // Installments Page
+    const InstallmentsPage = () => {
+      const [showPayModal, setShowPayModal] = useState(null);
+
+      return (
+        <div>
+          <Header title="Angsuran" subtitle="Kelola pembayaran angsuran pinjaman" />
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-900">Jadwal Angsuran - Ahmad Fauzi (PNJ-2024-001)</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Angsuran Ke</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jatuh Tempo</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nominal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tanggal Bayar</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {dummyInstallments.map((inst) => (
+                    <tr key={inst.id} className="table-row">
+                      <td className="px-6 py-4 font-medium text-gray-900">#{inst.angsuranKe}</td>
+                      <td className="px-6 py-4 text-gray-600">{formatDate(inst.tanggalJatuhTempo)}</td>
+                      <td className="px-6 py-4 font-semibold text-gray-900">{formatCurrency(inst.nominal)}</td>
+                      <td className="px-6 py-4 text-gray-600">
+                        {inst.tanggalBayar ? formatDate(inst.tanggalBayar) : '-'}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          inst.status === 'paid' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {inst.status === 'paid' ? 'Lunas' : 'Belum Bayar'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4">
+                        {inst.status === 'pending' && (
+                          <button 
+                            onClick={() => setShowPayModal(inst)}
+                            className="px-3 py-1.5 bg-primary-100 text-primary-700 rounded-lg text-sm font-medium hover:bg-primary-200"
+                          >
+                            Bayar
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {showPayModal && (
+            <Modal title="Konfirmasi Pembayaran Angsuran" onClose={() => setShowPayModal(null)}>
+              <div className="space-y-4">
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Angsuran Ke</p>
+                      <p className="font-medium">#{showPayModal.angsuranKe}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Jatuh Tempo</p>
+                      <p className="font-medium">{formatDate(showPayModal.tanggalJatuhTempo)}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <p className="text-sm text-gray-500">Nominal yang harus dibayar</p>
+                    <p className="text-2xl font-bold text-primary-600">{formatCurrency(showPayModal.nominal)}</p>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Tanggal Pembayaran</label>
+                  <input type="date" className="w-full px-4 py-3 border border-gray-200 rounded-xl" defaultValue={new Date().toISOString().split('T')[0]} />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                  <textarea className="w-full px-4 py-3 border border-gray-200 rounded-xl" rows="2" placeholder="Keterangan tambahan (opsional)"></textarea>
+                </div>
+                <div className="flex gap-3 pt-4">
+                  <button onClick={() => setShowPayModal(null)} className="flex-1 py-3 border border-gray-200 rounded-xl font-medium text-gray-700 hover:bg-gray-50">
+                    Batal
+                  </button>
+                  <button className="flex-1 btn-primary text-white py-3 rounded-xl font-medium">
+                    Konfirmasi Pembayaran
+                  </button>
+                </div>
+              </div>
+            </Modal>
+          )}
+        </div>
+      );
+    };
+
+    // Loan Apply Page (for Anggota)
+    const LoanApplyPage = () => {
+      const [formData, setFormData] = useState({
+        jenis: 'Reguler',
+        nominal: '',
+        tenor: '12',
+      });
+      const [showSimulation, setShowSimulation] = useState(false);
+
+      const member = dummyMembers[0]; // Ahmad Fauzi
+      const totalSimpanan = member.simpananPokok + member.simpananWajib + member.simpananSukarela;
+      const maxPinjaman = totalSimpanan * 3;
+
+      const bunga = 1; // 1% per bulan
+      const nominal = parseInt(formData.nominal) || 0;
+      const tenor = parseInt(formData.tenor) || 12;
+      const totalBunga = nominal * (bunga / 100) * tenor;
+      const totalBayar = nominal + totalBunga;
+      const angsuranPerBulan = totalBayar / tenor;
+
+      return (
+        <div>
+          <Header title="Ajukan Pinjaman" subtitle="Form pengajuan pinjaman baru" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-900 mb-6">Form Pengajuan</h3>
+                
+                <form className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Jenis Pinjaman</label>
+                    <div className="grid grid-cols-3 gap-3">
+                      {['Reguler', 'Darurat', 'Khusus'].map((jenis) => (
+                        <label
+                          key={jenis}
+                          className={`flex flex-col items-center p-4 rounded-xl cursor-pointer border-2 transition-all ${
+                            formData.jenis === jenis 
+                              ? 'border-primary-500 bg-primary-50' 
+                              : 'border-gray-200 hover:border-gray-300'
+                          }`}
+                        >
+                          <input
+                            type="radio"
+                            name="jenis"
+                            value={jenis}
+                            checked={formData.jenis === jenis}
+                            onChange={(e) => setFormData({...formData, jenis: e.target.value})}
+                            className="sr-only"
+                          />
+                          <span className="font-medium text-gray-900">{jenis}</span>
+                          <span className="text-xs text-gray-500 mt-1">
+                            {jenis === 'Reguler' ? 'Tenor 6-24 bulan' : 
+                             jenis === 'Darurat' ? 'Tenor 1-6 bulan' : 'Tenor 12-36 bulan'}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Nominal Pinjaman</label>
+                    <div className="relative">
+                      <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                      <input
+                        type="number"
+                        value={formData.nominal}
+                        onChange={(e) => setFormData({...formData, nominal: e.target.value})}
+                        className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl"
+                        placeholder="0"
+                      />
+                    </div>
+                    <p className="text-sm text-gray-500 mt-2">
+                      Maksimal pinjaman: <span className="font-semibold text-primary-600">{formatCurrency(maxPinjaman)}</span> (3x total simpanan)
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tenor (Bulan)</label>
+                    <select 
+                      value={formData.tenor}
+                      onChange={(e) => setFormData({...formData, tenor: e.target.value})}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl"
+                    >
+                      {[6, 10, 12, 18, 24].map(t => (
+                        <option key={t} value={t}>{t} Bulan</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tujuan Pinjaman</label>
+                    <textarea 
+                      className="w-full px-4 py-3 border border-gray-200 rounded-xl" 
+                      rows="3" 
+                      placeholder="Jelaskan tujuan penggunaan pinjaman..."
+                    ></textarea>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button 
+                      type="button"
+                      onClick={() => setShowSimulation(true)}
+                      className="flex-1 py-3 border border-primary-500 text-primary-600 rounded-xl font-medium hover:bg-primary-50"
+                    >
+                      Lihat Simulasi
+                    </button>
+                    <button 
+                      type="submit"
+                      className="flex-1 btn-primary text-white py-3 rounded-xl font-medium"
+                    >
+                      Ajukan Pinjaman
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+                <h3 className="font-semibold text-gray-900 mb-4">Info Simpanan Anda</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Simpanan Pokok</span>
+                    <span className="font-medium">{formatCurrency(member.simpananPokok)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Simpanan Wajib</span>
+                    <span className="font-medium">{formatCurrency(member.simpananWajib)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Simpanan Sukarela</span>
+                    <span className="font-medium">{formatCurrency(member.simpananSukarela)}</span>
+                  </div>
+                  <div className="flex justify-between pt-3 border-t border-gray-100">
+                    <span className="font-medium text-gray-900">Total Simpanan</span>
+                    <span className="font-bold text-primary-600">{formatCurrency(totalSimpanan)}</span>
+                  </div>
+                </div>
+              </div>
+
+              {showSimulation && nominal > 0 && (
+                <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-6 text-white animate-fade-in">
+                  <h3 className="font-semibold mb-4">Simulasi Pinjaman</h3>
+                  <div className="space-y-3">
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Pokok Pinjaman</span>
+                      <span className="font-medium">{formatCurrency(nominal)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Bunga ({bunga}%/bln × {tenor} bln)</span>
+                      <span className="font-medium">{formatCurrency(totalBunga)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-white/70">Tenor</span>
+                      <span className="font-medium">{tenor} bulan</span>
+                    </div>
+                    <div className="flex justify-between pt-3 border-t border-white/20">
+                      <span className="font-medium">Total Bayar</span>
+                      <span className="font-bold">{formatCurrency(totalBayar)}</span>
+                    </div>
+                    <div className="bg-white/20 rounded-xl p-4 mt-4">
+                      <p className="text-white/70 text-sm">Angsuran per Bulan</p>
+                      <p className="text-2xl font-bold">{formatCurrency(angsuranPerBulan)}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // My Savings Page (for Anggota)
+    const MySavingsPage = () => {
+      const member = dummyMembers[0];
+      const totalSimpanan = member.simpananPokok + member.simpananWajib + member.simpananSukarela;
+      const myTransactions = dummySavingTransactions.filter(t => t.anggotaId === 1);
+
+      return (
+        <div>
+          <Header title="Simpanan Saya" subtitle="Ringkasan simpanan Anda di koperasi" />
+
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-gradient-to-br from-primary-500 to-primary-700 rounded-2xl p-6 text-white">
+              <p className="text-white/70 text-sm">Total Simpanan</p>
+              <p className="text-3xl font-bold mt-2">{formatCurrency(totalSimpanan)}</p>
+            </div>
+            <StatCard
+              title="Simpanan Pokok"
+              value={formatCurrency(member.simpananPokok)}
+              icon={Icons.Wallet}
+              color="primary"
+            />
+            <StatCard
+              title="Simpanan Wajib"
+              value={formatCurrency(member.simpananWajib)}
+              icon={Icons.Wallet}
+              color="green"
+            />
+            <StatCard
+              title="Simpanan Sukarela"
+              value={formatCurrency(member.simpananSukarela)}
+              subtitle="Dapat ditarik"
+              icon={Icons.Wallet}
+              color="orange"
+            />
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-900">Riwayat Transaksi</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jenis</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nominal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {myTransactions.map((tx) => (
+                    <tr key={tx.id} className="table-row">
+                      <td className="px-6 py-4 text-gray-600">{formatDate(tx.tanggal)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          tx.nominal > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                        }`}>
+                          {tx.jenis}
+                        </span>
+                      </td>
+                      <td className={`px-6 py-4 font-semibold ${tx.nominal > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                        {tx.nominal > 0 ? '+' : ''}{formatCurrency(tx.nominal)}
+                      </td>
+                      <td className="px-6 py-4 text-gray-500">{tx.keterangan}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // My Loans Page (for Anggota)
+    const MyLoansPage = () => {
+      const myLoans = dummyLoans.filter(l => l.anggotaId === 1);
+      const activeLoan = myLoans.find(l => l.status === 'ongoing');
+
+      return (
+        <div>
+          <Header title="Pinjaman Saya" subtitle="Status dan riwayat pinjaman Anda" />
+
+          {activeLoan && (
+            <div className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl p-6 text-white mb-8">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <p className="text-white/70 text-sm">Pinjaman Aktif</p>
+                  <p className="text-3xl font-bold mt-1">{formatCurrency(activeLoan.nominal)}</p>
+                  <p className="text-white/70 mt-2">{activeLoan.nomorPinjaman} • {activeLoan.jenis}</p>
+                </div>
+                <div className="bg-white/20 rounded-xl p-4">
+                  <p className="text-white/70 text-sm">Sisa Angsuran</p>
+                  <p className="text-2xl font-bold">{activeLoan.sisaAngsuran} bulan</p>
+                  <p className="text-white/70 text-sm mt-1">{formatCurrency(activeLoan.angsuranPerBulan)}/bulan</p>
+                </div>
+              </div>
+              <div className="mt-6">
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Progress Pembayaran</span>
+                  <span>{Math.round((activeLoan.totalTerbayar / (activeLoan.nominal * 1.12)) * 100)}%</span>
+                </div>
+                <div className="h-2 bg-white/30 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-white rounded-full transition-all"
+                    style={{ width: `${(activeLoan.totalTerbayar / (activeLoan.nominal * 1.12)) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div className="p-6 border-b border-gray-100">
+              <h3 className="font-semibold text-gray-900">Riwayat Pinjaman</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">No. Pinjaman</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Tanggal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Jenis</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Nominal</th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {myLoans.map((loan) => (
+                    <tr key={loan.id} className="table-row">
+                      <td className="px-6 py-4 mono text-sm text-gray-600">{loan.nomorPinjaman}</td>
+                      <td className="px-6 py-4 text-gray-600">{formatDate(loan.tanggalPengajuan)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          loan.jenis === 'Reguler' ? 'bg-blue-100 text-blue-700' :
+                          loan.jenis === 'Darurat' ? 'bg-red-100 text-red-700' :
+                          'bg-purple-100 text-purple-700'
+                        }`}>
+                          {loan.jenis}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 font-semibold text-gray-900">{formatCurrency(loan.nominal)}</td>
+                      <td className="px-6 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          loan.status === 'ongoing' ? 'bg-green-100 text-green-700' :
+                          loan.status === 'completed' ? 'bg-gray-100 text-gray-600' :
+                          'bg-yellow-100 text-yellow-700'
+                        }`}>
+                          {loan.status === 'ongoing' ? 'Berjalan' :
+                           loan.status === 'completed' ? 'Lunas' : 'Proses'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Reports Page
+    const ReportsPage = () => {
+      return (
+        <div>
+          <Header title="Laporan" subtitle="Laporan keuangan koperasi" />
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Ringkasan Keuangan</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Total Simpanan</span>
+                  <span className="font-semibold text-green-600">
+                    {formatCurrency(dummyMembers.reduce((sum, m) => sum + m.simpananPokok + m.simpananWajib + m.simpananSukarela, 0))}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Total Pinjaman Outstanding</span>
+                  <span className="font-semibold text-orange-600">
+                    {formatCurrency(dummyLoans.filter(l => l.status === 'ongoing').reduce((sum, l) => sum + l.nominal, 0))}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Pendapatan Bunga (Est.)</span>
+                  <span className="font-semibold text-blue-600">{formatCurrency(1200000)}</span>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <span className="font-medium text-gray-900">Kas Tersedia</span>
+                  <span className="font-bold text-primary-600">{formatCurrency(15000000)}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <h3 className="font-semibold text-gray-900 mb-4">Statistik Anggota</h3>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Total Anggota</span>
+                  <span className="font-semibold">{dummyMembers.length}</span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Anggota Aktif</span>
+                  <span className="font-semibold text-green-600">
+                    {dummyMembers.filter(m => m.status === 'aktif').length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-3 border-b border-gray-100">
+                  <span className="text-gray-600">Anggota Non-Aktif</span>
+                  <span className="font-semibold text-gray-500">
+                    {dummyMembers.filter(m => m.status !== 'aktif').length}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between py-3">
+                  <span className="text-gray-600">Dengan Pinjaman Aktif</span>
+                  <span className="font-semibold text-orange-600">
+                    {dummyLoans.filter(l => l.status === 'ongoing').length}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="font-semibold text-gray-900">Export Laporan</h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center text-green-600">
+                  <Icons.Chart />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Laporan Simpanan</p>
+                  <p className="text-sm text-gray-500">Excel</p>
+                </div>
+              </button>
+              <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center text-orange-600">
+                  <Icons.CreditCard />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Laporan Pinjaman</p>
+                  <p className="text-sm text-gray-500">Excel</p>
+                </div>
+              </button>
+              <button className="flex items-center gap-3 p-4 border border-gray-200 rounded-xl hover:bg-gray-50 transition-colors">
+                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center text-blue-600">
+                  <Icons.Users />
+                </div>
+                <div className="text-left">
+                  <p className="font-medium text-gray-900">Laporan Anggota</p>
+                  <p className="text-sm text-gray-500">PDF</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // Settings Page
+    const SettingsPage = () => {
+      return (
+        <div>
+          <Header title="Pengaturan Sistem" subtitle="Konfigurasi parameter koperasi" />
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-6">Parameter Simpanan</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Simpanan Pokok</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                  <input type="text" className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl" defaultValue="500.000" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Simpanan Wajib / Bulan</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">Rp</span>
+                  <input type="text" className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl" defaultValue="100.000" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-6">Parameter Pinjaman</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Maksimal Pinjaman (x Simpanan)</label>
+                <select className="w-full px-4 py-3 border border-gray-200 rounded-xl">
+                  <option>2x Total Simpanan</option>
+                  <option selected>3x Total Simpanan</option>
+                  <option>4x Total Simpanan</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Bunga Pinjaman (%/bulan)</label>
+                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" defaultValue="1" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Tenor Maksimal (bulan)</label>
+                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" defaultValue="24" />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Masa Kerja Minimal (bulan)</label>
+                <input type="text" className="w-full px-4 py-3 border border-gray-200 rounded-xl" defaultValue="6" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6">
+            <h3 className="font-semibold text-gray-900 mb-6">Batas Approval</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 1 (Admin)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">≤ Rp</span>
+                  <input type="text" className="w-full pl-16 pr-4 py-3 border border-gray-200 rounded-xl" defaultValue="5.000.000" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 2 (Bendahara)</label>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">≤ Rp</span>
+                  <input type="text" className="w-full pl-16 pr-4 py-3 border border-gray-200 rounded-xl" defaultValue="20.000.000" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Level 3 (Ketua)</label>
+                <p className="py-3 text-gray-500">> Rp 20.000.000</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button className="btn-primary text-white px-8 py-3 rounded-xl font-medium">
+              Simpan Pengaturan
+            </button>
+          </div>
+        </div>
+      );
+    };
+
+    // Main App
+    const App = () => {
+      const [isLoggedIn, setIsLoggedIn] = useState(false);
+      const [role, setRole] = useState('');
+      const [currentPage, setCurrentPage] = useState('dashboard');
+
+      const handleLogin = (selectedRole) => {
+        setRole(selectedRole);
+        setIsLoggedIn(true);
+      };
+
+      const handleLogout = () => {
+        setIsLoggedIn(false);
+        setRole('');
+        setCurrentPage('dashboard');
+      };
+
+      const renderPage = () => {
+        switch (currentPage) {
+          case 'dashboard': return <DashboardPage role={role} />;
+          case 'members': return <MembersPage />;
+          case 'savings': return <SavingsPage />;
+          case 'loans': return <LoansPage />;
+          case 'approval': return <ApprovalPage role={role} />;
+          case 'installments': return <InstallmentsPage />;
+          case 'reports': return <ReportsPage />;
+          case 'settings': return <SettingsPage />;
+          case 'my-savings': return <MySavingsPage />;
+          case 'my-loans': return <MyLoansPage />;
+          case 'loan-apply': return <LoanApplyPage />;
+          default: return <DashboardPage role={role} />;
+        }
+      };
+
+      if (!isLoggedIn) {
+        return <LoginPage onLogin={handleLogin} />;
+      }
+
+      return (
+        <div className="min-h-screen gradient-mesh">
+          <Sidebar 
+            currentPage={currentPage} 
+            setCurrentPage={setCurrentPage} 
+            role={role}
+            onLogout={handleLogout}
+          />
+          <main className="ml-64 p-8">
+            {renderPage()}
+          </main>
+        </div>
+      );
+    };
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
